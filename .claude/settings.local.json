@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm install:*)",
+      "WebFetch(domain:docs.dndkit.com)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": []
+  }
+}
