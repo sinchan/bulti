@@ -1,4 +1,3 @@
-import React from "react";
 import { AIPlanner } from "./AIPlanner";
 import { AIPreview } from "./AIPreview";
 import { ChatMessage, PreviewData } from "./types";

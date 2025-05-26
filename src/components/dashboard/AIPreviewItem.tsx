@@ -1,4 +1,3 @@
-import React from "react";
 import { Task } from "@/types";
 import { ProjectBadge } from "./ProjectBadge";
 
@@ -56,7 +55,10 @@ export function AIPreviewItem({
               {original.title}
             </span>
             {original.title !== task.title && (
-              <span className="text-amber-700 dark:text-amber-400"> → {task.title}</span>
+              <span className="text-amber-700 dark:text-amber-400">
+                {" "}
+                → {task.title}
+              </span>
             )}
           </>
         )}
@@ -82,13 +84,18 @@ export function AIPreviewItem({
                 {original.notes}
               </span>
               {original.notes !== task.description && (
-                <span className="text-amber-700 dark:text-amber-400"> → {task.description}</span>
+                <span className="text-amber-700 dark:text-amber-400">
+                  {" "}
+                  → {task.description}
+                </span>
               )}
             </>
           )}
           {type !== "update" && (
             <span
-              className={type === "delete" ? "line-through text-muted-foreground" : ""}
+              className={
+                type === "delete" ? "line-through text-muted-foreground" : ""
+              }
             >
               {task.description}
             </span>
@@ -120,7 +127,9 @@ export function AIPreviewItem({
           )}
           {type !== "update" && (
             <span
-              className={type === "delete" ? "line-through text-muted-foreground" : ""}
+              className={
+                type === "delete" ? "line-through text-muted-foreground" : ""
+              }
             >
               {task.estimatedTime} min
             </span>

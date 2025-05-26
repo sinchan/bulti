@@ -3,7 +3,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTaskStore, AITaskSuggestion } from "@/store/taskStore";
 import { findProjectByName } from "@/lib/api";
-import { Task } from "@/types";
 import { supabase, getEdgeFunctionUrl } from "@/lib/supabase";
 import { format } from "date-fns";
 import { useTaskManager } from "./useTaskManager";
@@ -136,7 +135,10 @@ export function useAITaskPlanning() {
             let formattedDate = taskData.date;
 
             // Only if it's not in the expected format, we'll format it (but this shouldn't happen)
-            if (taskData.date && !/^\d{4}-\d{2}-\d{2}$/.test(taskData.date)) {
+            if (
+              taskData.date &&
+              !/^\d{4}-\d{2}-\d{2}$/.test(String(taskData.date))
+            ) {
               const taskDate = new Date(taskData.date);
               formattedDate = format(taskDate, "yyyy-MM-dd");
               console.log(
@@ -187,10 +189,12 @@ export function useAITaskPlanning() {
                 }
 
                 // Now we have a valid project with a real ID
-                projectsData.push({
-                  id: project.id,
-                  name: project.name,
-                });
+                if (project && project.id !== undefined) {
+                  projectsData.push({
+                    id: project.id,
+                    name: project.name,
+                  });
+                }
               }
             }
 
@@ -297,10 +301,12 @@ export function useAITaskPlanning() {
                 }
 
                 // Now we have a valid project with a real ID
-                projectsData.push({
-                  id: project.id,
-                  name: project.name,
-                });
+                if (project && project.id !== undefined) {
+                  projectsData.push({
+                    id: project.id,
+                    name: project.name,
+                  });
+                }
               }
             }
 

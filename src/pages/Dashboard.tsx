@@ -1,5 +1,5 @@
 // Dashboard.tsx
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { format, addDays, subDays } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/hooks/useProjects";
@@ -44,7 +44,6 @@ export default function Dashboard() {
     handleSaveTask,
     handleAddTask,
     fetchAllTasks,
-    updateTask,
     // getTasksForDate, // Currently unused
   } = useTaskManager(displayDates, selectedProjectId);
 
@@ -102,7 +101,9 @@ export default function Dashboard() {
       preparePreviewData={preparePreviewData}
       handleApplySuggestions={handleApplySuggestions}
       isApplyingAI={isApplyingAI}
-      projectsData={projectsData}
+      projectsData={projectsData
+        .filter((p) => p.id !== undefined)
+        .map((p) => ({ id: p.id!, name: p.name }))}
       onCancelSuggestions={handleCancelSuggestions}
     >
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -118,8 +119,6 @@ export default function Dashboard() {
           <DragAndDropContext
             localTasks={localTasks}
             setLocalTasks={setLocalTasks}
-            updateTask={updateTask}
-            fetchAllTasks={fetchAllTasks}
           >
             {/* Render three days */}
             {displayDates.map((date) => {

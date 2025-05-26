@@ -1,15 +1,12 @@
-"use client";
-
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function SignOutButton() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -21,9 +18,8 @@ export default function SignOutButton() {
       }
 
       toast.success("Signed out successfully");
-      router.push("/login");
-      router.refresh();
-    } catch (error: any) {
+      navigate("/login");
+    } catch (error: unknown) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out. Please try again.");
     } finally {

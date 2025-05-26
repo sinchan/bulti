@@ -12,11 +12,7 @@ import {
   DragOverlay,
   UniqueIdentifier,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 import { Task } from "@/types";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api";
@@ -178,7 +174,7 @@ export const DragAndDropContext: React.FC<DragAndDropContextProps> = ({
         return newState;
       });
     },
-    [findContainer, formatDateString]
+    [findContainer, formatDateString, setLocalTasks]
   );
 
   // Handle drag end event
@@ -201,7 +197,7 @@ export const DragAndDropContext: React.FC<DragAndDropContextProps> = ({
 
       try {
         // Build batch updates by comparing original state with final state
-        const batchUpdates: { id: number; order: number; date?: string }[] = [];
+        const batchUpdates: { id: number; order: number; date: string }[] = [];
         const processedTasks = new Set<number>();
 
         // Process all containers to find changes
@@ -261,6 +257,7 @@ export const DragAndDropContext: React.FC<DragAndDropContextProps> = ({
               batchUpdates.push({
                 id: task.id,
                 order: currentIndex,
+                date: formatDateString(container),
               });
             }
           });
@@ -288,13 +285,8 @@ export const DragAndDropContext: React.FC<DragAndDropContextProps> = ({
         setClonedLocalTasks({});
       }
     },
-    [clonedLocalTasks, localTasks, formatDateString]
+    [clonedLocalTasks, localTasks, formatDateString, setLocalTasks]
   );
-
-  // Get all task IDs for the sortable contexts
-  const getTaskIds = useCallback((containerTasks: Task[]) => {
-    return containerTasks.map((task) => `task-${task.id}`);
-  }, []);
 
   return (
     <DndContext
@@ -304,17 +296,6 @@ export const DragAndDropContext: React.FC<DragAndDropContextProps> = ({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      {/* Render sortable contexts for each container */}
-      {Object.keys(localTasks).map((dateKey) => (
-        <SortableContext
-          key={dateKey}
-          items={getTaskIds(localTasks[dateKey])}
-          strategy={verticalListSortingStrategy}
-        >
-          {/* This is where your TasksContainer components will be rendered */}
-        </SortableContext>
-      ))}
-
       {children}
 
       <DragOverlay>

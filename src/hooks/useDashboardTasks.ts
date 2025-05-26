@@ -6,7 +6,10 @@ import { Task } from "@/types";
 import { useTasks } from "@/hooks/useTasks";
 import { toast } from "sonner";
 
-export const useDashboardTasks = (displayDates: Date[], selectedProjectId: number | null) => {
+export const useDashboardTasks = (
+  displayDates: Date[],
+  selectedProjectId: number | null
+) => {
   const {
     tasks,
     isLoading,
@@ -87,7 +90,8 @@ export const useDashboardTasks = (displayDates: Date[], selectedProjectId: numbe
     });
 
     if (foundTask) {
-      updateTask({ ...foundTask, ...changes });
+      const updatedTask = Object.assign({}, foundTask, changes) as Task;
+      updateTask(updatedTask);
     }
   };
 
@@ -141,6 +145,7 @@ export const useDashboardTasks = (displayDates: Date[], selectedProjectId: numbe
     // If a date is provided, set it as the default for the new task
     if (date) {
       const emptyTask = {
+        id: 0, // Temporary ID for new task
         title: "",
         description: "",
         date: format(date, "yyyy-MM-dd"),
@@ -148,6 +153,7 @@ export const useDashboardTasks = (displayDates: Date[], selectedProjectId: numbe
         projects: [],
         completed: false,
         order: 0,
+        userId: "", // Will be set when creating
       };
       setTaskToEdit(emptyTask as Task);
     }

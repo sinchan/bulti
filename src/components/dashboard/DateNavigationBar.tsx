@@ -1,6 +1,3 @@
-import React from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/button";
 import { format, isToday } from "date-fns";
 
 interface DateNavigationBarProps {
@@ -10,7 +7,6 @@ interface DateNavigationBarProps {
 
 export const DateNavigationBar: React.FC<DateNavigationBarProps> = ({
   centerDate,
-  setCenterDate,
 }) => {
   return (
     <div className="p-3">

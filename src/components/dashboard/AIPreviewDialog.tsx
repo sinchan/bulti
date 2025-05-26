@@ -37,9 +37,9 @@ export const AIPreviewDialog: React.FC<AIPreviewDialogProps> = ({
       open={
         isOpen &&
         !!pendingSuggestions &&
-        (pendingSuggestions.create?.length > 0 ||
-          pendingSuggestions.update?.length > 0 ||
-          pendingSuggestions.delete?.length > 0)
+        ((pendingSuggestions.create?.length ?? 0) > 0 ||
+          (pendingSuggestions.update?.length ?? 0) > 0 ||
+          (pendingSuggestions.delete?.length ?? 0) > 0)
       }
       onOpenChange={setIsOpen}
     >

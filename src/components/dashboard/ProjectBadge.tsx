@@ -1,5 +1,3 @@
-import React from "react";
-
 interface ProjectBadgeProps {
   projectName: string;
   isNewProject: boolean;

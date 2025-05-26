@@ -151,7 +151,7 @@ const DashboardSidebar = ({
                   ? "bg-white dark:bg-slate-950 shadow-inner border border-slate-200 dark:border-slate-800"
                   : ""
               }`}
-              onClick={() => onProjectSelect(project.id)}
+              onClick={() => onProjectSelect(project.id ?? null)}
             >
               {project.name}
             </Button>

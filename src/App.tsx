@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import UserNavbar from "@/components/UserNavbar";
 import "./App.css";
 // Supports weights 100-900
-import "@fontsource-variable/inter";
+import "@fontsource-variable/inter/index.css";
 
 function App() {
   const { user, loading } = useAuth();

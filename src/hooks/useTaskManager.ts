@@ -8,10 +8,13 @@ import { useCallback, useState, useEffect } from "react";
 import { toast } from "sonner";
 
 // Comprehensive hook that combines useTasks and useDashboardTasks functionality
-export const useTaskManager = (displayDates?: Date[], selectedProjectId: number | null = null) => {
+export const useTaskManager = (
+  displayDates?: Date[],
+  selectedProjectId: number | null = null
+) => {
   const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
-  
+
   // Local task state for dashboard view
   const [localTasks, setLocalTasks] = useState<{ [key: string]: Task[] }>({});
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -48,7 +51,7 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
       // Try to extract date part from ISO string
       return date.split("T")[0];
     }
-    
+
     // Default to today if we can't parse the date
     return format(new Date(), "yyyy-MM-dd");
   }, []);
@@ -72,61 +75,63 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Task): Promise<Task> => {
-      console.log('useTaskManager - updateTask mutation called with:', {
+      console.log("useTaskManager - updateTask mutation called with:", {
         taskId: updatedTask.id,
         date: updatedTask.date,
-        dateType: typeof updatedTask.date
+        dateType: typeof updatedTask.date,
       });
-      
+
       // Ensure task date is properly formatted
       const taskToUpdate = {
         ...updatedTask,
-        date: formatDateString(updatedTask.date)
+        date: formatDateString(updatedTask.date),
       };
-      
-      console.log('Sending to API service:', {
+
+      console.log("Sending to API service:", {
         taskId: taskToUpdate.id,
-        finalDate: taskToUpdate.date
+        finalDate: taskToUpdate.date,
       });
-      
+
       return await apiService.updateTask(taskToUpdate);
     },
     onMutate: async (updatedTask) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["tasks"] });
-      
+
       // Snapshot the previous value
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
-      
+
       // Optimistically update to the new value
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return [updatedTask];
-        
-        const updated = old.map((task) => 
-          task.id === updatedTask.id ? {...updatedTask, date: formatDateString(updatedTask.date)} : task
+
+        const updated = old.map((task) =>
+          task.id === updatedTask.id
+            ? { ...updatedTask, date: formatDateString(updatedTask.date) }
+            : task
         );
-        
-        console.log('Cache updated, new task state:', {
+
+        console.log("Cache updated, new task state:", {
           taskId: updatedTask.id,
-          updatedDate: formatDateString(updatedTask.date)
+          updatedDate: formatDateString(updatedTask.date),
         });
-        
+
         return updated;
       });
-      
+
       // Return a context object with the previous tasks
       return { previousTasks };
     },
-    onError: (error: Error, variables, context) => {
+    onError: (error: Error, _variables, context) => {
       console.error("Failed to update task:", error.message);
       toast.error(`Failed to update task: ${error.message}`);
-      
+
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousTasks) {
         queryClient.setQueryData(["tasks"], context.previousTasks);
       }
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
       toast.success("Task updated successfully");
     },
     onSettled: () => {
@@ -146,7 +151,7 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
       );
       return { previousTasks };
     },
-    onError: (error: Error, variables, context) => {
+    onError: (error: Error, _variables, context) => {
       console.error("Failed to delete task:", error.message);
       toast.error(`Failed to delete task: ${error.message}`);
       if (context?.previousTasks) {
@@ -222,7 +227,7 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
   // Update local tasks when dates or project filter changes
   useEffect(() => {
     if (!displayDates) return;
-    
+
     if (tasks && tasks.length > 0) {
       const newLocalTasks: { [key: string]: Task[] } = {};
       displayDates.forEach((date) => {
@@ -250,34 +255,40 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
   ]);
 
   // Handle task changes
-  const handleTaskChange = useCallback((taskId: number, changes: Partial<Task>) => {
-    // Find the task across all dates
-    let foundTask: Task | null = null;
+  const handleTaskChange = useCallback(
+    (taskId: number, changes: Partial<Task>) => {
+      // Find the task across all dates
+      let foundTask: Task | null = null;
 
-    if (tasks) {
-      foundTask = tasks.find(t => t.id === taskId) || null;
-    } else {
-      Object.entries(localTasks).some(([, tasksForDate]) => {
-        const task = tasksForDate.find((t) => t.id === taskId);
-        if (task) {
-          foundTask = task;
-          return true;
-        }
-        return false;
-      });
-    }
+      if (tasks) {
+        foundTask = tasks.find((t) => t.id === taskId) || null;
+      } else {
+        Object.entries(localTasks).some(([, tasksForDate]) => {
+          const task = tasksForDate.find((t) => t.id === taskId);
+          if (task) {
+            foundTask = task;
+            return true;
+          }
+          return false;
+        });
+      }
 
-    if (foundTask) {
-      updateTaskMutation.mutate({ ...foundTask, ...changes });
-    } else {
-      console.error(`Task with ID ${taskId} not found for update`);
-    }
-  }, [tasks, localTasks, updateTaskMutation]);
+      if (foundTask) {
+        updateTaskMutation.mutate({ ...foundTask, ...changes });
+      } else {
+        console.error(`Task with ID ${taskId} not found for update`);
+      }
+    },
+    [tasks, localTasks, updateTaskMutation]
+  );
 
   // Handle task deletion
-  const handleTaskDelete = useCallback((taskId: number) => {
-    deleteTaskMutation.mutate(taskId);
-  }, [deleteTaskMutation]);
+  const handleTaskDelete = useCallback(
+    (taskId: number) => {
+      deleteTaskMutation.mutate(taskId);
+    },
+    [deleteTaskMutation]
+  );
 
   // Handle task editing
   const handleTaskEdit = useCallback((task: Task) => {
@@ -286,32 +297,35 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
   }, []);
 
   // Handle task saving
-  const handleSaveTask = useCallback(async (taskData: Task | Omit<Task, "id">) => {
-    try {
-      console.log("Saving task:", {
-        taskId: "id" in taskData ? taskData.id : "new task",
-        date: taskData.date,
-        dateType: typeof taskData.date,
-      });
+  const handleSaveTask = useCallback(
+    async (taskData: Task | Omit<Task, "id">) => {
+      try {
+        console.log("Saving task:", {
+          taskId: "id" in taskData ? taskData.id : "new task",
+          date: taskData.date,
+          dateType: typeof taskData.date,
+        });
 
-      if ("id" in taskData) {
-        // Update existing task
-        await updateTaskMutation.mutateAsync(taskData as Task);
-      } else {
-        // Create new task
-        await createTaskMutation.mutateAsync(taskData);
+        if ("id" in taskData) {
+          // Update existing task
+          await updateTaskMutation.mutateAsync(taskData as Task);
+        } else {
+          // Create new task
+          await createTaskMutation.mutateAsync(taskData);
+        }
+
+        setIsTaskModalOpen(false);
+        setTaskToEdit(null);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+        toast.error(`Failed to save task: ${errorMessage}`);
+        console.error("Save task error:", error);
+        // Keep modal open so user can retry
       }
-
-      setIsTaskModalOpen(false);
-      setTaskToEdit(null);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      toast.error(`Failed to save task: ${errorMessage}`);
-      console.error("Save task error:", error);
-      // Keep modal open so user can retry
-    }
-  }, [updateTaskMutation, createTaskMutation]);
+    },
+    [updateTaskMutation, createTaskMutation]
+  );
 
   // Add new task
   const handleAddTask = useCallback((date?: Date) => {
@@ -319,6 +333,7 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
     // If a date is provided, set it as the default for the new task
     if (date) {
       const emptyTask = {
+        id: 0, // Temporary ID for new task
         title: "",
         description: "",
         date: format(date, "yyyy-MM-dd"),
@@ -326,6 +341,7 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
         projects: [],
         completed: false,
         order: 0,
+        userId: "", // Will be set when creating
       };
       setTaskToEdit(emptyTask as Task);
     }
@@ -337,25 +353,25 @@ export const useTaskManager = (displayDates?: Date[], selectedProjectId: number 
     tasks,
     error,
     isLoading: tasksLoading || authLoading,
-    
+
     // Dashboard view specific
     localTasks,
     setLocalTasks,
     isTaskModalOpen,
     setIsTaskModalOpen,
     taskToEdit,
-    
+
     // Actions
     fetchAllTasks,
     createTask: (task: Omit<Task, "id">) => createTaskMutation.mutate(task),
     updateTask: (task: Task) => updateTaskMutation.mutate(task),
     deleteTask: (id: number) => deleteTaskMutation.mutate(id),
-    
+
     // Helper methods
     getTasksForDate,
     getTasksForWeek,
     formatDateString,
-    
+
     // Dashboard specific handlers
     handleTaskChange,
     handleTaskDelete,

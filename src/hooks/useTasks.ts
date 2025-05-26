@@ -51,152 +51,158 @@ export const useTasks = (): TasksHookReturn => {
 
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Task): Promise<Task> => {
-      console.log('useTasks hook - updateTask mutation called with:', {
+      console.log("useTasks hook - updateTask mutation called with:", {
         taskId: updatedTask.id,
         date: updatedTask.date,
         dateType: typeof updatedTask.date,
-        fullTask: updatedTask
+        fullTask: updatedTask,
       });
-      
+
       // Ensure task date is properly formatted as a string before passing to API
-      let taskToUpdate = {...updatedTask};
-      
+      let taskToUpdate = { ...updatedTask };
+
       // If date is a string in YYYY-MM-DD format, keep it as is
-      if (typeof taskToUpdate.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(taskToUpdate.date)) {
-        console.log('Task date is already properly formatted YYYY-MM-DD:', {
+      if (
+        typeof taskToUpdate.date === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(taskToUpdate.date)
+      ) {
+        console.log("Task date is already properly formatted YYYY-MM-DD:", {
           taskId: taskToUpdate.id,
-          date: taskToUpdate.date
+          date: taskToUpdate.date,
         });
-      } 
+      }
       // Otherwise, ensure it's formatted correctly
       else if (taskToUpdate.date) {
         try {
-          console.log('Need to format task date:', {
+          console.log("Need to format task date:", {
             taskId: taskToUpdate.id,
             originalDate: taskToUpdate.date,
-            dateType: typeof taskToUpdate.date
+            dateType: typeof taskToUpdate.date,
           });
-          
-          const dateValue = typeof taskToUpdate.date === 'string' 
-            ? new Date(taskToUpdate.date)
-            : taskToUpdate.date;
-            
-          const formattedDate = format(dateValue, 'yyyy-MM-dd');
+
+          const dateValue =
+            typeof taskToUpdate.date === "string"
+              ? new Date(taskToUpdate.date)
+              : taskToUpdate.date;
+
+          const formattedDate = format(dateValue, "yyyy-MM-dd");
           taskToUpdate.date = formattedDate;
           console.log(`Reformatted task date:`, {
             taskId: taskToUpdate.id,
             from: updatedTask.date,
-            to: formattedDate
+            to: formattedDate,
           });
         } catch (error) {
-          console.error('Failed to format date:', {
+          console.error("Failed to format date:", {
             error,
             taskId: taskToUpdate.id,
-            originalDate: taskToUpdate.date
+            originalDate: taskToUpdate.date,
           });
           // Default to today if parsing fails
-          taskToUpdate.date = format(new Date(), 'yyyy-MM-dd');
-          console.log('Using today as fallback date:', taskToUpdate.date);
+          taskToUpdate.date = format(new Date(), "yyyy-MM-dd");
+          console.log("Using today as fallback date:", taskToUpdate.date);
         }
       } else {
         // Default to today if no date provided
-        taskToUpdate.date = format(new Date(), 'yyyy-MM-dd');
-        console.log('No date provided, using today:', {
+        taskToUpdate.date = format(new Date(), "yyyy-MM-dd");
+        console.log("No date provided, using today:", {
           taskId: taskToUpdate.id,
-          dateSet: taskToUpdate.date
+          dateSet: taskToUpdate.date,
         });
       }
-      
+
       // Call the API service to persist the change
-      console.log('Sending to API service:', {
+      console.log("Sending to API service:", {
         taskId: taskToUpdate.id,
         finalDate: taskToUpdate.date,
-        dateType: typeof taskToUpdate.date
+        dateType: typeof taskToUpdate.date,
       });
       return await apiService.updateTask(taskToUpdate);
     },
     onMutate: async (updatedTask) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["tasks"] });
-      
+
       // Snapshot the previous value
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
-      
+
       // Find current task in cache to see what we're changing
-      const currentCachedTask = previousTasks?.find(task => task.id === updatedTask.id);
-      console.log('Current cached task before update:', {
+      const currentCachedTask = previousTasks?.find(
+        (task) => task.id === updatedTask.id
+      );
+      console.log("Current cached task before update:", {
         taskId: updatedTask.id,
         currentDate: currentCachedTask?.date,
         newDate: updatedTask.date,
-        isDateChanging: currentCachedTask?.date !== updatedTask.date
+        isDateChanging: currentCachedTask?.date !== updatedTask.date,
       });
-      
+
       // Log the task update operation
-      console.log('Optimistically updating task in React Query cache:', {
+      console.log("Optimistically updating task in React Query cache:", {
         taskId: updatedTask.id,
         date: updatedTask.date,
-        dateType: typeof updatedTask.date
+        dateType: typeof updatedTask.date,
       });
-      
+
       // Optimistically update to the new value
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return [updatedTask];
-        
-        const updated = old.map((task) => 
+
+        const updated = old.map((task) =>
           task.id === updatedTask.id ? updatedTask : task
         );
-        
-        console.log('Cache updated, new task state:', {
+
+        console.log("Cache updated, new task state:", {
           taskId: updatedTask.id,
-          updatedDate: updatedTask.date
+          updatedDate: updatedTask.date,
         });
-        
+
         return updated;
       });
-      
+
       // Return a context object with the previous tasks
       return { previousTasks };
     },
     onError: (error: Error, variables, context) => {
       console.error("Failed to update task:", error.message);
       console.error("Task that failed to update:", variables);
-      
+
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousTasks) {
         queryClient.setQueryData(["tasks"], context.previousTasks);
       }
     },
     onSuccess: (result, variables) => {
-      console.log('Task updated successfully in Supabase:', {
+      console.log("Task updated successfully in Supabase:", {
         taskId: result.id,
         returnedDate: result.date,
         originalDate: variables.date,
-        datesMatch: result.date === variables.date
+        datesMatch: result.date === variables.date,
       });
-      
+
       // Update the cache with the result from the server to ensure consistency
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return [result];
-        
-        const updated = old.map((task) => 
+
+        const updated = old.map((task) =>
           task.id === result.id ? result : task
         );
-        
-        console.log('Cache updated with server response:', {
+
+        console.log("Cache updated with server response:", {
           taskId: result.id,
-          finalDate: result.date
+          finalDate: result.date,
         });
-        
+
         return updated;
       });
     },
     onSettled: (data, error, variables) => {
       // Always refetch after error or success to ensure cache is in sync with server
-      console.log('Re-fetching tasks after mutation settled', {
+      console.log("Re-fetching tasks after mutation settled", {
         taskId: variables.id,
         success: !!data,
         error: !!error,
-        finalDate: data?.date
+        finalDate: data?.date,
       });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
@@ -212,7 +218,7 @@ export const useTasks = (): TasksHookReturn => {
       );
       return { previousTasks };
     },
-    onError: (error: Error, variables, context) => {
+    onError: (error: Error, _variables, context) => {
       console.error("Failed to delete task:", error.message);
       if (context?.previousTasks) {
         queryClient.setQueryData(["tasks"], context.previousTasks);

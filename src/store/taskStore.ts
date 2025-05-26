@@ -9,7 +9,7 @@ interface TaskState {
   activeTaskId: number | null;
   draggedTaskId: number | null;
   dragOverTaskId: number | null;
-  
+
   // AI state
   isApplyingAI: boolean;
   aiSuggestions: AITaskSuggestion | null;
@@ -41,37 +41,40 @@ interface TaskForAI {
   projects: string[];
 }
 
-export const useTaskStore = create<TaskState>((set, get) => ({
+export const useTaskStore = create<TaskState>((set) => ({
   // UI state
   activeTaskId: null,
   draggedTaskId: null,
   dragOverTaskId: null,
-  
+
   // AI state
   isApplyingAI: false,
   aiSuggestions: null,
 
   // UI state setters
   setActiveTask: (id) => {
-    console.log('taskStore: Setting active task ID:', id);
+    console.log("taskStore: Setting active task ID:", id);
     set({ activeTaskId: id });
   },
   setDraggedTask: (id) => {
-    console.log('taskStore: Setting dragged task ID:', id);
+    console.log("taskStore: Setting dragged task ID:", id);
     set({ draggedTaskId: id });
   },
   setDragOverTask: (id) => {
-    console.log('taskStore: Setting drag over task ID:', id);
+    console.log("taskStore: Setting drag over task ID:", id);
     set({ dragOverTaskId: id });
   },
 
   // AI state setters
   setIsApplyingAI: (isApplying) => {
-    console.log('taskStore: Setting isApplyingAI:', isApplying);
+    console.log("taskStore: Setting isApplyingAI:", isApplying);
     set({ isApplyingAI: isApplying });
   },
   setAISuggestions: (suggestions) => {
-    console.log('taskStore: Setting AI suggestions:', suggestions ? 'suggestions present' : 'null');
+    console.log(
+      "taskStore: Setting AI suggestions:",
+      suggestions ? "suggestions present" : "null"
+    );
     set({ aiSuggestions: suggestions });
   },
 
