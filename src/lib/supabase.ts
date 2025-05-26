@@ -9,18 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Get the base URL for Supabase Edge Functions based on the current environment
  */
 export const getEdgeFunctionBaseUrl = () => {
-  const isLocalDev =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
-
-  if (isLocalDev) {
-    // Local Supabase development URL
-    return `${supabaseUrl}/functions/v1`;
-  } else {
-    // Production URL - this will use the same domain as your app
-    // with the /functions/v1 path
-    return "/functions/v1";
-  }
+  return `${supabaseUrl}/functions/v1`;
 };
 
 /**
