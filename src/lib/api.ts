@@ -243,7 +243,7 @@ export const apiService = {
 
     // Update project connections if provided
     if (task.projects) {
-      // First remove existing connections
+      // First remove existing connections and wait for completion
       const { error: deleteError } = await supabase
         .from("tasks_projects")
         .delete()
@@ -269,11 +269,20 @@ export const apiService = {
           .insert(projectConnections);
 
         if (insertError) {
-          console.error(
-            "Failed to insert new project connections:",
-            insertError
-          );
-          throw insertError;
+          // Handle duplicate key constraint error gracefully
+          if (insertError.code === "23505") {
+            console.warn(
+              "Duplicate project connection detected, ignoring:",
+              insertError.message
+            );
+            // Don't throw the error for duplicate key - it means the connection already exists
+          } else {
+            console.error(
+              "Failed to insert new project connections:",
+              insertError
+            );
+            throw insertError;
+          }
         }
       }
     }
@@ -476,7 +485,18 @@ const handleProjectConnections = async (
     .from("tasks_projects")
     .insert(projectConnections);
 
-  if (projectError) throw projectError;
+  if (projectError) {
+    // Handle duplicate key constraint error gracefully
+    if (projectError.code === "23505") {
+      console.warn(
+        "Duplicate project connection detected during task creation, ignoring:",
+        projectError.message
+      );
+      // Don't throw the error for duplicate key - it means the connection already exists
+    } else {
+      throw projectError;
+    }
+  }
 };
 
 // Define a type for TaskRecord from database

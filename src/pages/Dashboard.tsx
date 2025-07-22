@@ -43,6 +43,7 @@ export default function Dashboard() {
     handleTaskEdit,
     handleSaveTask,
     handleAddTask,
+    createTask,
     fetchAllTasks,
     // getTasksForDate, // Currently unused
   } = useTaskManager(displayDates, selectedProjectId);
@@ -137,6 +138,7 @@ export default function Dashboard() {
                       onTaskDelete={handleTaskDelete}
                       onTaskEdit={handleTaskEdit}
                       onAddTask={() => handleAddTask(date)}
+                      onCreateTask={createTask}
                     />
                   </div>
                 </div>

@@ -16,6 +16,7 @@ interface TasksContainerProps {
   onTaskDelete: (taskId: number) => void;
   onTaskEdit: (task: Task) => void;
   onAddTask: () => void;
+  onCreateTask?: (task: Omit<Task, "id">) => Promise<void>;
 }
 
 export function TasksContainer({
@@ -26,6 +27,7 @@ export function TasksContainer({
   onTaskDelete,
   onTaskEdit,
   onAddTask,
+  onCreateTask,
 }: TasksContainerProps) {
   // Transform tasks to have prefixed IDs for sortable context
   const sortableTaskIds = localTasks.map((task) => `task-${task.id}`);
@@ -53,6 +55,7 @@ export function TasksContainer({
           onTaskEdit={onTaskEdit}
           date={currentDate}
           onAddTask={onAddTask}
+          onCreateTask={onCreateTask}
           isOver={isOver}
         />
       </SortableContext>

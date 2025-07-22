@@ -8,6 +8,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CheckIcon, PauseIcon, PlayIcon } from "@radix-ui/react-icons";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
+import FullscreenTaskView from "./FullscreenTaskView";
 
 interface TaskCardProps {
   task: Task;
@@ -25,6 +26,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const [task, setTask] = useState<Task>(initialTask);
   const [isStarted, setIsStarted] = useState(false);
+  const [showFullscreen, setShowFullscreen] = useState(false);
 
   useEffect(() => {
     setTask(initialTask);
@@ -43,7 +45,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       type: "task",
       task: initialTask,
     },
-    disabled: isDragOverlay,
+    disabled: isDragOverlay || showFullscreen,
   });
 
   const handleCompleteTask = async (e: React.MouseEvent) => {
@@ -66,7 +68,31 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const handleStartPause = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isStarted) {
+      setShowFullscreen(true);
+    }
     setIsStarted(!isStarted);
+  };
+
+  const handleCloseFullscreen = () => {
+    setShowFullscreen(false);
+    setIsStarted(false);
+  };
+
+  const handleCompleteFromFullscreen = async () => {
+    const updatedTask = { ...task, completed: true };
+    try {
+      if (onUpdate) {
+        await onUpdate(updatedTask);
+      }
+      setTask(updatedTask);
+      setShowFullscreen(false);
+      setIsStarted(false);
+      toast.success("Task marked as completed");
+    } catch (error) {
+      toast.error("Failed to complete task");
+      console.error("Error completing task:", error);
+    }
   };
 
   const style: React.CSSProperties = {
@@ -79,16 +105,22 @@ const TaskCard: React.FC<TaskCardProps> = ({
   // Don't apply drag styles to the overlay
   const cardStyle = isDragOverlay ? { opacity: 1 } : style;
 
+  const handleCardClick = () => {
+    if (!showFullscreen && onEdit) {
+      onEdit();
+    }
+  };
+
   return (
     <Card
       ref={isDragOverlay ? undefined : setNodeRef}
-      onClick={onEdit}
+      onClick={handleCardClick}
       style={cardStyle}
-      className={`mb-5 pt-6 pb-2 cursor-pointer transition-all shadow-none hover:shadow-md dark:hover:border-blue-900 ${
+      className={`mb-5 pt-6 pb-2 ${showFullscreen ? 'cursor-default' : 'cursor-pointer'} transition-all shadow-none hover:shadow-md dark:hover:border-blue-900 ${
         isDragOverlay ? "shadow-lg rotate-3" : ""
       } ${isDragging ? "shadow-lg" : ""}`}
-      {...(!isDragOverlay ? attributes : {})}
-      {...(!isDragOverlay ? listeners : {})}
+      {...(!isDragOverlay && !showFullscreen ? attributes : {})}
+      {...(!isDragOverlay && !showFullscreen ? listeners : {})}
     >
       <CardContent className="px-4 py-0">
         {/* First row: Title only */}
@@ -147,6 +179,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
       </CardFooter>
+      
+      <FullscreenTaskView
+        task={task}
+        isVisible={showFullscreen}
+        onClose={handleCloseFullscreen}
+        onComplete={handleCompleteFromFullscreen}
+      />
     </Card>
   );
 };

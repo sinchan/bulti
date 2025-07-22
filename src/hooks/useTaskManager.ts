@@ -61,8 +61,8 @@ export const useTaskManager = (
     mutationFn: apiService.createTask,
     onSuccess: (result) => {
       queryClient.setQueryData<Task[]>(["tasks"], (old) => [
-        ...(old || []),
         result,
+        ...(old || []),
       ]);
       toast.success("Task created successfully");
     },

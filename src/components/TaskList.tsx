@@ -1,7 +1,8 @@
 // TaskList.tsx
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import TaskCard from "./TaskCard";
+import QuickAddTask from "./QuickAddTask";
 import { Task } from "@/types";
 import { useTasks } from "@/hooks/useTasks";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ interface TaskListProps {
   id?: string;
   date?: Date;
   onAddTask?: () => void;
+  onCreateTask?: (task: Omit<Task, "id">) => Promise<void>;
   isOver?: boolean;
 }
 
@@ -28,9 +30,11 @@ const TaskList: React.FC<TaskListProps> = ({
   onTaskDelete,
   onTaskEdit,
   onAddTask,
+  onCreateTask,
   isOver = false,
 }) => {
   const { updateTask, deleteTask } = useTasks();
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   // Sort tasks by order
   const sortedTasks = useMemo(() => {
@@ -48,6 +52,25 @@ const TaskList: React.FC<TaskListProps> = ({
     }
   };
 
+  const handleQuickAddClick = () => {
+    if (onCreateTask && date) {
+      setShowQuickAdd(true);
+    } else if (onAddTask) {
+      onAddTask();
+    }
+  };
+
+  const handleQuickAddSave = async (task: Omit<Task, "id">) => {
+    if (onCreateTask) {
+      await onCreateTask(task);
+      setShowQuickAdd(false);
+    }
+  };
+
+  const handleQuickAddCancel = () => {
+    setShowQuickAdd(false);
+  };
+
   return (
     <div
       className={`flex flex-col h-full overflow-y-auto transition-colors ${
@@ -59,13 +82,23 @@ const TaskList: React.FC<TaskListProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={onAddTask}
+          onClick={handleQuickAddClick}
           className="w-full flex items-center justify-center"
         >
           <PlusIcon className="h-4 w-4 mr-1" />
           Add Task
         </Button>
       </div>
+
+      {showQuickAdd && date && (
+        <QuickAddTask
+          date={date}
+          onSave={handleQuickAddSave}
+          onCancel={handleQuickAddCancel}
+          isVisible={showQuickAdd}
+          existingTasks={sortedTasks}
+        />
+      )}
 
       <div className="space-y-2 flex-grow overflow-y-auto p-3">
         {sortedTasks.length === 0 ? (
