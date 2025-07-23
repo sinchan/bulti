@@ -363,7 +363,9 @@ export const useTaskManager = (
 
     // Actions
     fetchAllTasks,
-    createTask: (task: Omit<Task, "id">) => createTaskMutation.mutate(task),
+    createTask: async (task: Omit<Task, "id">) => {
+      await createTaskMutation.mutateAsync(task);
+    },
     updateTask: (task: Task) => updateTaskMutation.mutate(task),
     deleteTask: (id: number) => deleteTaskMutation.mutate(id),
 

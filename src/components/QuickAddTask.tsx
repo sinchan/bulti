@@ -1,8 +1,7 @@
 // QuickAddTask.tsx
 "use client";
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Task, Project } from "@/types";
+import { Task } from "@/types";
 import { useProjects } from "@/hooks/useProjects";
 import { format } from "date-fns";
 
@@ -81,7 +80,7 @@ export default function QuickAddTask({
         estimatedTime: 30, // Default 30 minutes
         order: newOrder,
         userId: "", // Will be set by the API
-        projects: selectedProject ? [selectedProject] : [],
+        projects: selectedProject ? [{ id: selectedProject.id || 0, name: selectedProject.name }] : [],
       };
 
       await onSave(newTask);
