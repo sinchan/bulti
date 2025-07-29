@@ -27,7 +27,8 @@ export const apiService = {
         title: task.title,
         description: task.description || "",
         notes: task.notes || "",
-        date: task.date,
+        // Extract just the date part from the stored timestamp
+        date: task.date ? task.date.split('T')[0] : task.date,
         completed: task.completed || false,
         estimatedTime: task.estimated_time || 0,
         order: task.order || 0,
@@ -43,6 +44,21 @@ export const apiService = {
 
   // Create a new task
   createTask: async (task: Omit<Task, "id">): Promise<Task> => {
+    // Helper function to format date for storage
+    // We store the date at noon UTC to avoid timezone issues
+    const formatDateForStorage = (date: Date | string): string => {
+      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        // If it's already in YYYY-MM-DD format, add noon UTC time
+        return `${date}T12:00:00.000Z`;
+      }
+      // For Date objects, set to noon in local time then convert to ISO
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}T12:00:00.000Z`;
+    };
+    
     // Get the current user first
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -64,7 +80,7 @@ export const apiService = {
           description: task.description,
           notes: task.notes,
           date:
-            typeof task.date === "string" ? task.date : task.date.toISOString(),
+            typeof task.date === "string" ? task.date : formatDateForStorage(task.date),
           completed: task.completed || false,
           estimated_time: task.estimatedTime,
           order: task.order,
@@ -91,7 +107,7 @@ export const apiService = {
         title: createdTask.title,
         description: createdTask.description || "",
         notes: createdTask.notes || "",
-        date: createdTask.date,
+        date: createdTask.date ? createdTask.date.split('T')[0] : createdTask.date,
         completed: createdTask.completed || false,
         estimatedTime: createdTask.estimated_time || 0,
         order: createdTask.order || 0,
@@ -122,34 +138,36 @@ export const apiService = {
     let dateValue = task.date;
     const originalDateValue = task.date; // Keep for comparison
 
+    // Helper function to format date for storage
+    // We store the date at noon UTC to avoid timezone issues
+    const formatDateForStorage = (date: Date | string): string => {
+      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        // If it's already in YYYY-MM-DD format, add noon UTC time
+        return `${date}T12:00:00.000Z`;
+      }
+      // For Date objects, set to noon in local time then convert to ISO
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}T12:00:00.000Z`;
+    };
+
     // Ensure we have a valid date string
     if (dateValue === undefined || dateValue === null) {
       // Default to today if date is missing
-      dateValue = new Date().toISOString().split("T")[0];
+      dateValue = formatDateForStorage(new Date());
       console.warn(
         `Task ${task.id} had undefined date, defaulting to today: ${dateValue}`
       );
     } else if (typeof dateValue === "string") {
       console.log(`Task ${task.id} date is string type: "${dateValue}"`);
-      // Use the string as-is if it's already a string
-      // But ensure it's in YYYY-MM-DD format if possible
-      if (dateValue.includes("T")) {
-        // If it's an ISO string, extract just the date part
-        const originalValue = dateValue;
-        dateValue = dateValue.split("T")[0];
-        console.log(
-          `Task ${task.id} date converted from ISO string: "${originalValue}" -> "${dateValue}"`
-        );
-      } else {
-        console.log(
-          `Task ${task.id} date appears to be in YYYY-MM-DD format already: "${dateValue}"`
-        );
-      }
-      // No additional processing needed if it's already YYYY-MM-DD format
+      // Convert string dates to storage format
+      dateValue = formatDateForStorage(dateValue);
     } else if (dateValue instanceof Date) {
-      // Convert Date object to ISO string and extract date part
+      // Convert Date object to YYYY-MM-DD in local timezone
       const originalValue = dateValue;
-      dateValue = dateValue.toISOString().split("T")[0];
+      dateValue = formatDateForStorage(dateValue);
       console.log(
         `Task ${task.id} date converted from Date object: "${originalValue}" -> "${dateValue}"`
       );
@@ -165,7 +183,7 @@ export const apiService = {
         const parsedDate = new Date(dateValue);
         if (!isNaN(parsedDate.getTime())) {
           const originalValue = dateValue;
-          dateValue = parsedDate.toISOString().split("T")[0];
+          dateValue = formatDateForStorage(parsedDate);
           console.log(
             `Task ${
               task.id
@@ -174,7 +192,7 @@ export const apiService = {
         } else {
           // If parsing fails, default to today
           const originalValue = dateValue;
-          dateValue = new Date().toISOString().split("T")[0];
+          dateValue = formatDateForStorage(new Date());
           console.warn(
             `Task ${task.id} had invalid date: "${originalValue}", defaulting to today: "${dateValue}"`
           );
@@ -182,7 +200,7 @@ export const apiService = {
       } catch (error) {
         // Last resort, default to today
         const originalValue = dateValue;
-        dateValue = new Date().toISOString().split("T")[0];
+        dateValue = formatDateForStorage(new Date());
         console.warn(
           `Task ${task.id} date parsing error for "${originalValue}", defaulting to today: "${dateValue}"`,
           error
@@ -287,10 +305,10 @@ export const apiService = {
       }
     }
 
-    // Return a task with the safely processed date value
+    // Return a task with the date in YYYY-MM-DD format
     const finalTask = {
       ...task,
-      date: dateValue,
+      date: dateValue ? dateValue.split('T')[0] : dateValue,
     };
 
     console.log("Returning updated task from API service:", {
