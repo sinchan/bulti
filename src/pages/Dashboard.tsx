@@ -11,6 +11,7 @@ import { DragAndDropContext } from "@/components/dashboard/DragAndDropContext";
 import { TasksContainer } from "@/components/dashboard/TasksContainer";
 import { useAIPlanning } from "@/hooks/useAIPlanning";
 import { useTaskManager } from "@/hooks/useTaskManager";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -79,14 +80,7 @@ export default function Dashboard() {
 
   // If tasks are loading, show loading state
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
